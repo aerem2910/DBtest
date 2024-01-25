@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace DBtest
 {
 
-    
-        public enum Command
+
+    public enum Command
         {
             Register,
             Message,
@@ -24,7 +19,11 @@ namespace DBtest
             public string FromName { get; set; }
             public string ToName { get; set; }
             public string Text { get; set; }
-            public List<string> UnreadMessages { get; set; }
+            public override string ToString()
+            {
+              return $"{DateTime.Now} \n Получено сообщение {Text} \n от {FromName}  ";
+            }
+
 
         // Метод для сериализации в JSON
         public string ToJson()

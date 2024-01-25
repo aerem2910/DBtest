@@ -1,18 +1,19 @@
-﻿using DBtest.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using DBtest.Abstraction;
+using DBtest.Models;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DBtest
 {
-   public class Server
+    public class Server : IServer
     {
         private readonly Dictionary<string, IPEndPoint> clients = new Dictionary<string, IPEndPoint>();
-        private UdpClient udpClient;
+        private IMessageSource messageSource;
+
+        public Server(IMessageSource messageSource)
+        {
+            this.messageSource = messageSource;
+        }
 
         public void Register(MessageUDP message, IPEndPoint fromep)
         {
@@ -66,7 +67,7 @@ namespace DBtest
 
                 byte[] forwardBytes = Encoding.ASCII.GetBytes(forwardMessageJson);
 
-                udpClient.Send(forwardBytes, forwardBytes.Length, ep);
+                messageSource.SendMessage(new MessageUDP(), ep); // изменено, чтобы использовать IMessageSource
                 Console.WriteLine($"Message Relayed, from = {message.FromName} to = {message.ToName}");
             }
             else
@@ -95,8 +96,7 @@ namespace DBtest
             }
         }
 
-
-        void GetUnreadMessages(string userName)
+        public void GetUnreadMessages(string userName)
         {
             if (clients.TryGetValue(userName, out IPEndPoint ep))
             {
@@ -111,11 +111,11 @@ namespace DBtest
                         {
                             Command = Command.GetUnreadMessages,
                             FromName = "Server",
-                            UnreadMessages = unreadMessages
+                           
                         };
 
                         byte[] unreadBytes = Encoding.ASCII.GetBytes(unreadMessagesJson.ToJson());
-                        udpClient.Send(unreadBytes, unreadBytes.Length, ep);
+                        messageSource.SendMessage(new MessageUDP(), ep); // изменено, чтобы использовать IMessageSource
                         Console.WriteLine($"Unread messages sent to {userName}");
                     }
                 }
@@ -126,13 +126,11 @@ namespace DBtest
             }
         }
 
-
-
         public void Work()
         {
             IPEndPoint remoteEndPoint;
 
-            udpClient = new UdpClient(5430);
+            messageSource = new MessageSource(5430); // изменено, чтобы использовать IMessageSource
             remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
             Console.WriteLine("UDP Клиент ожидает сообщений...");
@@ -140,7 +138,7 @@ namespace DBtest
             while (true)
             {
                 Console.WriteLine("Ожидание сообщения...");
-                byte[] receiveBytes = udpClient.Receive(ref remoteEndPoint);
+                byte[] receiveBytes = Encoding.ASCII.GetBytes(messageSource.ReceiveMessage(ref remoteEndPoint).ToJson()); // изменено, чтобы использовать IMessageSource
                 string receivedData = Encoding.ASCII.GetString(receiveBytes);
 
                 Console.WriteLine(receivedData);

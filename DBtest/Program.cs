@@ -1,17 +1,14 @@
-﻿using DBtest.Models;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using DBtest.Abstraction;
 
 namespace DBtest
 {
-   public class Program
+    public class Program
     {
         static void Main(string[] args)
         {
+            IMessageSource messageSource = new MessageSource(5430);
             // Создаем экземпляр сервера и запускаем его
-            Server server = new Server();
+            IServer server = new Server(messageSource);
             server.Work();
 
             // Тестовые данные
@@ -24,7 +21,7 @@ namespace DBtest
             //Console.ReadLine();
         }
 
-        static void TestRegisterMessage(Server server)
+        static void TestRegisterMessage(IServer server)
         {
             // Тестовое сообщение для регистрации
             var registerMessage = new MessageUDP
@@ -37,7 +34,7 @@ namespace DBtest
             server.ProcessMessage(registerMessage, new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 5430));
         }
 
-        static void TestConfirmationMessage(Server server)
+        static void TestConfirmationMessage(IServer server)
         {
             // Тестовое сообщение подтверждения
             var confirmationMessage = new MessageUDP
@@ -50,7 +47,7 @@ namespace DBtest
             server.ProcessMessage(confirmationMessage, new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 5430));
         }
 
-        static void TestRelayMessage(Server server)
+        static void TestRelayMessage(IServer server)
         {
             // Тестовое сообщение для пересылки
             var relayMessage = new MessageUDP
@@ -65,7 +62,7 @@ namespace DBtest
             server.ProcessMessage(relayMessage, new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 5430));
         }
 
-        static void TestGetUnreadMessages(Server server)
+        static void TestGetUnreadMessages(IServer server)
         {
             // Тестовое сообщение для получения непрочитанных сообщений
             var getUnreadMessages = new MessageUDP
